@@ -1,0 +1,193 @@
+---
+title: 'Reproducible Research: Course Project 1'
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+summary(cars)
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Loading and preprocessing the data
+-----------------------------------------
+
+Show any code that is needed to:
+
+Load the data (i.e. 𝚛𝚎𝚊𝚍.𝚌𝚜𝚟())
+
+```{r}
+## Load the data
+activityDF <- read.csv("activity.csv", header=TRUE)
+```
+
+Process/transform the data (if necessary) into a format suitable for your analysis
+
+```{r}
+## Change class of the date column. 
+activityDF$date <- as.Date(activityDF$date, format = "%Y-%m-%d")
+
+## Load dplyr as we will be using summarize
+library(dplyr)
+```
+
+What is mean total number of steps taken per day?
+-----------------------------------------
+
+For this part of the assignment, you can ignore the missing values in the dataset.
+
+Calculate the total number of steps taken per day
+
+```{r}
+## sum the steps per day/date. Also computed mean per day, but I don't think that's 
+## what the instructions intended.
+sum_steps_day <- aggregate(steps~date,activityDF,sum, na.action=na.pass)
+
+```
+
+If you do not understand the difference between a histogram and a barplot, research the difference between them. Make a histogram of the total number of steps taken each day
+
+```{r,echo=TRUE}
+## Make a histogram of the total number of steps taken each day
+hist(days_total_steps$sum_steps, 
+     main="Histogram for Total Steps in Day", 
+     xlab="Total Daily Steps", 
+     border="blue", 
+     col="green",
+     ylim=c(0,40),
+     las=1, 
+     breaks=5)
+
+## output to look at the data. This should be removed.
+days_total_steps
+```
+
+
+Calculate and report the mean and median of the total number of steps taken per day
+```{r}
+## Calculate and report the mean and median of the total number of steps taken per day
+total_mean <- mean(days_total_steps$sum_steps, na.rm = TRUE)
+total_median <- median(days_total_steps$sum_steps, na.rm = TRUE)
+
+total_mean
+total_median
+```
+
+Mean number of steps taken per day is `r total_mean`
+
+Median number of steps taken per day is `r total_median`
+
+What is the average daily activity pattern?
+-----------------------------------------
+
+Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r, echo=TRUE}
+## sum the steps per day/date and computed mean per day.
+interval_total_steps <- summarize(group_by(activityDF, interval),
+                              sum_steps = sum(steps, na.rm = TRUE),
+                              mean_steps = mean(steps, na.rm = TRUE))
+
+## output to look at the data. This should be removed.
+interval_total_steps
+
+## Make a time series plot (i.e. 𝚝𝚢𝚙𝚎 = "𝚕") of the 5-minute interval (x-axis)
+## and the average number of steps taken, averaged across all days (y-axis)
+plot(interval_total_steps$interval,
+     interval_total_steps$mean_steps,
+     type="l",
+     main="Average Number of Steps Per 5-Minute Interval", 
+     xlab="5-Minute Interval (0 through 2355)",
+     ylab="Average Number of Steps"
+     )
+```
+
+
+Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+The interval with the maximum number of steps on average across all the days in the dataset is `r interval_total_steps$interval[which.max(interval_total_steps$mean_steps)] `
+
+```{r}
+## Which 5-minute interval, on average across all the days in the dataset,
+## contains the maximum number of steps?
+interval_total_steps$interval[which.max(interval_total_steps$mean_steps)]
+```
+
+
+Imputing missing values
+-----------------------------------------
+
+Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
+
+The number of missing values in the dataset is `r sum(is.na(activityDF$steps)) `
+```{r}
+## Calculate and report the total number of missing values in the dataset
+## (i.e. the total number of rows with 𝙽𝙰s)
+sum(is.na(activityDF$steps))
+```
+
+Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r}
+## Create a new dataset that is equal to the original dataset but with the missing
+## data filled in.
+imputedDF <- activityDF
+
+## check to find interval = NA, then assign mean steps for that interval
+for (i in 1:17568) {
+        if (is.na(imputedDF$steps[i])) {
+                imputedDF$steps[i] <- interval_total_steps[which(interval_total_steps$interval == imputedDF$interval[i]), ]$mean_steps
+        } 
+}
+
+## verifying the NA's got filled in. This can be removed.
+sum(is.na(imputedDF$steps))
+```
+
+
+Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. 
+
+```{r, echo=TRUE}
+## Make a histogram of the total number of steps taken each day
+imputed_days_total_steps <- summarize(group_by(imputedDF, date),
+                              sum_steps = sum(steps, na.rm = TRUE))
+
+hist(imputed_days_total_steps$sum_steps, 
+     main="Histogram for Total Steps in Day (with imputed values)", 
+     xlab="Steps", 
+     border="blue", 
+     col="green",
+     ylim=c(0,40),
+     las=1, 
+     breaks=5)
+
+imputed_total_mean <- mean(imputed_days_total_steps$sum_steps, na.rm = TRUE)
+imputed_total_median <- median(imputed_days_total_steps$sum_steps, na.rm = TRUE)
+
+imputed_total_mean
+imputed_total_median
+```
+
+The mean number of steps taken per day is `r imputed_total_mean`
+
+The median number of steps taken per day is `r imputed_total_median`
+
+Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+Yes, these values differ.
+
+By imputing the missing data, the total daily number of steps increases, which increases the average total daily number of steps. 
+
+
+

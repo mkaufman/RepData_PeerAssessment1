@@ -1,13 +1,9 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
-```{r}
+
+```r
 ## Load the data
 activityDF <- read.csv("activity.csv", header=TRUE)
 
@@ -16,14 +12,30 @@ activityDF$date <- as.Date(activityDF$date, format = "%Y-%m-%d")
 
 ## Load dplyr as we will be using summarize
 library(dplyr)
+```
 
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
 ```
 
 
 ## What is mean total number of steps taken per day?
 
-```{r, echo=TRUE}
 
+```r
 sum_steps_day <- aggregate(steps~date,activityDF,sum, na.action=na.pass)
 
 hist(sum_steps_day$steps, 
@@ -34,19 +46,24 @@ hist(sum_steps_day$steps,
      ylim=c(0,40),
      las=1, 
      breaks=5)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)\
+
+```r
 total_mean <- mean(sum_steps_day$steps, na.rm = TRUE)
 total_median <- median(sum_steps_day$steps, na.rm = TRUE)
 ```
 
-Mean number of steps taken per day is `r format(total_mean, scientific=FALSE) `
+Mean number of steps taken per day is 10766.19
 
-Median number of steps taken per day is `r total_median`. 
+Median number of steps taken per day is 10765. 
 
 
 ## What is the average daily activity pattern?
 
-```{r, echo=TRUE}
+
+```r
 mean_interval_daily_steps <- aggregate(steps~interval, activityDF, mean)
 
 plot(mean_interval_daily_steps$interval,
@@ -56,27 +73,36 @@ plot(mean_interval_daily_steps$interval,
      xlab="5-Minute Interval (0 through 2355)",
      ylab="Average Number of Steps"
 )
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)\
 
+```r
 max_interval <- mean_interval_daily_steps$interval[which.max(mean_interval_daily_steps$steps)]
 ```
 
 
-The interval with the maximum number of steps on average across all the days in the dataset is `r max_interval `
+The interval with the maximum number of steps on average across all the days in the dataset is 835
 
 ## Imputing missing values
 
-The number of missing values in the dataset is `r sum(is.na(activityDF$steps)) `
-```{r}
+The number of missing values in the dataset is 2304
+
+```r
 ## Calculate and report the total number of missing values in the dataset
 ## (i.e. the total number of rows with 𝙽𝙰s)
 sum(is.na(activityDF$steps))
 ```
 
+```
+## [1] 2304
+```
+
 ####Strategy for Missing Values
 My strategy is to use the mean across all days for a given interval in place of a missing value for that interval on a particular day.
 
-```{r, echo=TRUE}
+
+```r
 ## Create a new dataset that is equal to the original dataset but with the missing
 ## data filled in.
 
@@ -101,15 +127,18 @@ hist(imputed_days_total_steps2$steps,
      ylim=c(0,40),
      las=1, 
      breaks=5)
-
-imputed_total_mean2 <- mean(imputed_days_total_steps2$steps, na.rm = TRUE)
-imputed_total_median2 <- median(imputed_days_total_steps2$steps, na.rm = TRUE)
-
 ```
 
-The mean number of steps taken per day is `r format(imputed_total_mean2, scientific=FALSE)`
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)\
 
-The median number of steps taken per day is `r format(imputed_total_median2, scientific=FALSE)`
+```r
+imputed_total_mean2 <- mean(imputed_days_total_steps2$steps, na.rm = TRUE)
+imputed_total_median2 <- median(imputed_days_total_steps2$steps, na.rm = TRUE)
+```
+
+The mean number of steps taken per day is 10766.19
+
+The median number of steps taken per day is 10766.19
 
 ####Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
@@ -122,7 +151,8 @@ Adding the imputed values based on the average number of steps for each interval
 
 There are differences in activity patterns between the weekdays and weekends. It appears that the number of steps in the early morning is greater on the weekdays and more concentrated around the max point, perhaps when the subject was commuting to work. The weekend activity is spreadh throughout more of the afternoon and has increased acvitity in later hours of the evening.
 
-```{r, echo=TRUE}
+
+```r
 #create a vector of weekdays
 weekdays1 <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
 #Use `%in%` and `weekdays` to create a logical vector
@@ -145,6 +175,7 @@ weekend_interval_total_steps$wDay <- "weekend"
 complete <- rbind(weekday_interval_total_steps,weekend_interval_total_steps)
 
 xyplot(mean_steps ~ interval | wDay, data = complete, layout = c(1, 2), type="l")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)\
 
